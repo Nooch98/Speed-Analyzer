@@ -1,22 +1,61 @@
 Add-Type -AssemblyName System.Windows.Forms
 
 $taskName = "Speed tracker"
+$scriptPath = "$HOME\Desktop\Pruebas\Speed-Analyzer\"
+$markerFile = "$scriptPath\installation_complete.marker"
+
+# Verificar si la instalación ya se ha completado
+if (Test-Path $markerFile) {
+    Write-Host "La instalación ya se ha completado."
+} else {
+    $existingSpeedTest = Get-Command -Name speedtest -ErrorAction SilentlyContinue
+
+    if ($existingSpeedTest -eq $null) {
+        Write-Host "El comando 'speedtest' no está instalado."
+
+        # Verifica si choco está instalado
+        $existingchoco = Get-Command -Name choco -ErrorAction SilentlyContinue
+
+        if ($existingchoco -eq $null) {
+            Write-Host "Instalando choco..."
+            Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+            Write-Host "choco instalado correctamente."
+            
+            # Instala SpeedTest usando choco
+            Write-Host "Instalando SpeedTest..."
+            choco install speedtest
+            Write-Host "SpeedTest instalado correctamente."
+
+            # Marcar la instalación como completa
+            New-Item -ItemType File -Path $markerFile | Out-Null
+        } else {
+            # Instala SpeedTest usando choco
+            Write-Host "Instalando SpeedTest..."
+            choco install speedtest
+            Write-Host "SpeedTest instalado correctamente."
+
+            # Marcar la instalación como completa
+            New-Item -ItemType File -Path $markerFile | Out-Null
+        }
+    } else {
+        Write-Host "El comando 'speedtest' ya está instalado."
+    }
+}
 
 $existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
-
 if (!$existingTask) {
     # Definir la acción a realizar por la tarea (ejecutar el script)
-    $action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument '-NoProfile -WindowStyle Hidden -File "C:\Users\Nooch\Documents\PowerShell\Scripts\speed_analyzer.bat"'
+    $action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument '-NoProfile -WindowStyle Hidden -File "$HOME\Documents\PowerShell\Scripts\speed_analyzer.bat"'
     # Definir la frecuencia de ejecución de la tarea (cada 1 hora, repetir durante 10 años)
     $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).Date -RepetitionInterval (New-TimeSpan -Hours 1) -RepetitionDuration (New-TimeSpan -Days 3650)  # 10 años
 
     # Crear la tarea programada
     Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Description "Tarea programada para ejecutar el script de Speedtest cada hora."
-    
+        
     Write-Host "Se ha creado la tarea programada '$taskName'."
-} else {
-    Write-Host "La tarea programada '$taskName' ya existe."
-}
+    } else {
+        Write-Host "La tarea programada '$taskName' ya existe."
+    }
 
 # Ejecutar Speedtest
 $(speedtest)
