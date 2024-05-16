@@ -1,5 +1,23 @@
 Add-Type -AssemblyName System.Windows.Forms
 
+$taskName = "Speed tracker"
+
+$existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+
+if (!$existingTask) {
+    # Definir la acción a realizar por la tarea (ejecutar el script)
+    $action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument '-NoProfile -WindowStyle Hidden -File "C:\Users\Nooch\Documents\PowerShell\Scripts\speed_analyzer.bat"'
+    # Definir la frecuencia de ejecución de la tarea (cada 1 hora, repetir durante 10 años)
+    $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).Date -RepetitionInterval (New-TimeSpan -Hours 1) -RepetitionDuration (New-TimeSpan -Days 3650)  # 10 años
+
+    # Crear la tarea programada
+    Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Description "Tarea programada para ejecutar el script de Speedtest cada hora."
+    
+    Write-Host "Se ha creado la tarea programada '$taskName'."
+} else {
+    Write-Host "La tarea programada '$taskName' ya existe."
+}
+
 # Ejecutar Speedtest
 $(speedtest)
 
