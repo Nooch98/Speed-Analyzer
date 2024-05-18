@@ -1,56 +1,56 @@
 Add-Type -AssemblyName System.Windows.Forms
 
 $taskName = "Speed tracker"
-$scriptPath = "$HOME\Documents\PowerShell\Scripts\"
+$scriptPath = "$env:USERPROFILE\Documents\PowerShell\Scripts\"
 $markerFile = "$scriptPath\installation_complete.marker"
 $speedTestResultsPath = "$scriptPath\speedtest_results.csv"
 
-# Verificar si la instalación ya se ha completado
+# Check if the installation is complete
 if (Test-Path $markerFile) {
-    Write-Host "La instalación ya se ha completado."
+    Write-Host "The installation has already been completed."
 } else {
     $existingSpeedTest = Get-Command -Name speedtest -ErrorAction SilentlyContinue
 
     if ($existingSpeedTest -eq $null) {
-        Write-Host "El comando 'speedtest' no está instalado."
+        Write-Host "The 'speedtest' command is not installed."
 
-        # Verifica si choco está instalado
+        # Check if choco is installed
         $existingchoco = Get-Command -Name choco -ErrorAction SilentlyContinue
 
         if ($existingchoco -eq $null) {
-            Write-Host "Instalando choco..."
+            Write-Host "Installing choco..."
             Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-            Write-Host "choco instalado correctamente."
+            Write-Host "choco installed successfully."
             
-            # Instala SpeedTest usando choco
-            Write-Host "Instalando SpeedTest..."
+            # Install SpeedTest using choco
+            Write-Host "Installing SpeedTest..."
             choco install speedtest
-            Write-Host "SpeedTest instalado correctamente."
+            Write-Host "SpeedTest installed successfully."
 
-            # Marcar la instalación como completa
+            # Mark the installation as complete
             New-Item -ItemType File -Path $markerFile | Out-Null
         } else {
-            # Instala SpeedTest usando choco
-            Write-Host "Instalando SpeedTest..."
+            # Install SpeedTest using choco.
+            Write-Host "Installing SpeedTest..."
             choco install speedtest
-            Write-Host "SpeedTest instalado correctamente."
+            Write-Host "SpeedTest installed successfully."
 
-            # Marcar la instalación como completa
+            # Mark installation as complete
             New-Item -ItemType File -Path $markerFile | Out-Null
         }
     } else {
-        Write-Host "El comando 'speedtest' ya está instalado."
+        Write-Host "The 'speedtest' command is already installed."
     }
 }
 
 function Show-CustomForm {
     $form = New-Object Windows.Forms.Form
-    $form.Text = "Configuración de Tarea Programada"
+    $form.Text = "Scheduled Task Configuration"
     $form.Size = New-Object Drawing.Size(400, 250)
     $form.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
 
     $label1 = New-Object Windows.Forms.Label
-    $label1.Text = "Intervalo de repetición (en horas):"
+    $label1.Text = "Repetition Interval (in hours):"
     $label1.AutoSize = $true
     $label1.Location = New-Object Drawing.Point(10, 20)
     $form.Controls.Add($label1)
@@ -62,7 +62,7 @@ function Show-CustomForm {
     $form.Controls.Add($textBox1)
 
     $label2 = New-Object Windows.Forms.Label
-    $label2.Text = "Duración (en días):"
+    $label2.Text = "Duration (in days):"
     $label2.AutoSize = $true
     $label2.Location = New-Object Drawing.Point(10, 60)
     $form.Controls.Add($label2)
@@ -74,7 +74,7 @@ function Show-CustomForm {
     $form.Controls.Add($textBox2)
 
     $checkBox1 = New-Object Windows.Forms.CheckBox
-    $checkBox1.Text = "Permitir que la tarea arranque el equipo"
+    $checkBox1.Text = "Allow task to wake the computer"
     $checkBox1.AutoSize = $true
     $checkBox1.Location = New-Object Drawing.Point(10, 100)
     $form.Controls.Add($checkBox1)
@@ -108,26 +108,26 @@ if (!$existingTask) {
         $duration = $config.Duration
         $wakeToRun = $config.WakeToRun
 
-        # Definir la acción a realizar por la tarea (ejecutar el script)
-        $action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument '-NoProfile -WindowStyle Hidden -File "$HOME\Documents\PowerShell\Scripts\speed_analyzer.ps1"'
+        # Define the action to be performed by the task (execute the script)
+        $action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument '-NoProfile -WindowStyle Hidden -File "$env:USERPROFILE\Documents\PowerShell\Scripts\speed_analyzer.ps1"'
 
-        # Definir la frecuencia de ejecución de la tarea (cada N horas, repetir durante X días)
+        # Define the frequency of task execution (every N hours, repeat for X days)
         $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).Date -RepetitionInterval (New-TimeSpan -Hours $interval) -RepetitionDuration (New-TimeSpan -Days $duration)
 
-        # Crear la tarea programada
+        # Create the scheduled task
         $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
         if ($wakeToRun) {
             $settings.WakeToRun = $true
         }
 
-        Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Description "Tarea programada para ejecutar el script de Speedtest."
+        Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Description "Scheduled task to run the Speedtest script."
 
-        Write-Host "Se ha creado la tarea programada '$taskName' con los parámetros especificados."
+        Write-Host "The scheduled task '$taskName' has been created with the specified parameters."
     } else {
-        Write-Host "No se ha creado ninguna tarea programada."
+        Write-Host "No scheduled task has been created."
     }
 } else {
-    Write-Host "La tarea programada '$taskName' ya existe."
+    Write-Host "The scheduled task '$taskName' already exists."
 }
 
 function Write-SpeedTestResult {
@@ -140,36 +140,36 @@ function Write-SpeedTestResult {
     Add-Content -Path $speedTestResultsPath -Value $result
 }
 
-# Ejecutar Speedtest
+# Run Speedtest
 $(speedtest)
 
-# Obtener la velocidad de descarga y subida desde la salida de Speedtest
+# Get the download and upload speeds from the Speedtest output
 $speedtestOutput = speedtest | Out-String
 
-# Obtener la velocidad de descarga y subida desde la salida de Speedtest
+# Get the download and upload speeds from the Speedtest output
 $downloadSpeedMatch = [regex]::Match($speedtestOutput, 'Download:\s+(\d+\.\d+) Mbps')
 $uploadSpeedMatch = [regex]::Match($speedtestOutput, 'Upload:\s+(\d+\.\d+) Mbps')
 
-# Verificar si se encontraron las velocidades de descarga y subida en la salida de Speedtest
+# Check if the download and upload speeds were found in the Speedtest output
 if ($downloadSpeedMatch.Success -and $uploadSpeedMatch.Success) {
     $downloadSpeed = [double]$downloadSpeedMatch.Groups[1].Value
     $uploadSpeed = [double]$uploadSpeedMatch.Groups[1].Value
 
-    # Establecer umbrales de velocidad
+    # Set speed thresholds
     $downloadThreshold = 900
     $uploadThreshold = 800
 
-    # Comprobar si la velocidad es inferior al umbral
+    # Check if the speed is below the threshold
     if ($downloadSpeed -lt $downloadThreshold -or $uploadSpeed -lt $uploadThreshold) {
-        # Mostrar ventana de advertencia
-        $title = "Advertencia de velocidad de Internet"
-        $message = "La velocidad de descarga es $downloadSpeed Mbps y la velocidad de subida es $uploadSpeed Mbps, lo que es inferior al umbral requerido."
+        # Display warning window
+        $title = "Internet Speed Warning"
+        $message = "The download speed is $downloadSpeed Mbps and the upload speed is $uploadSpeed Mbps, which is below the required threshold."
         [System.Windows.Forms.MessageBox]::Show($message, $title, [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Warning)
-        Write-SpeedTestResult
+        Write-SpeedTestResult -downloadSpeed $downloadSpeed -uploadSpeed $uploadSpeed
     } else {
-        Write-Host "La velocidad de Internet es aceptable."
-        Write-SpeedTestResult
+        Write-Host "The internet speed is acceptable."
+        Write-SpeedTestResult -downloadSpeed $downloadSpeed -uploadSpeed $uploadSpeed
     }
 } else {
-    Write-Host "No se pudo extraer la velocidad de descarga y subida de la salida de Speedtest."
+    Write-Host "Failed to extract download and upload speeds from Speedtest output."
 }
