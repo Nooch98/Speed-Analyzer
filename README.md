@@ -7,11 +7,11 @@ Speed-Anlyzer is recommended to be installed in the Scripts folder in the PowerS
 1. Download the two scripts
 
 ```PowerShell
-wget https://raw.githubusercontent.com/Nooch98/Speed-Analyzer/main/speed_analyzer.ps1
+wget -P $env:USERPROFILE\Documents\PowerShell\Scripts\ https://raw.githubusercontent.com/Nooch98/Speed-Analyzer/main/speed_analyzer.ps1
 ```
 
 ```PowerShell
-wget https://raw.githubusercontent.com/Nooch98/Speed-Analyzer/main/speed_analyzer_uninstall.ps1
+wget -P $env:USERPROFILE\Documents\PowerShell\Scripts\ https://raw.githubusercontent.com/Nooch98/Speed-Analyzer/main/speed_analyzer_uninstall.ps1
 ```
 
 2. Execute speed_Analyzer.ps1
