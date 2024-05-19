@@ -109,18 +109,19 @@ if (!$existingTask) {
         $wakeToRun = $config.WakeToRun
 
         # Define the action to be performed by the task (execute the script)
-        $action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument '-NoProfile -WindowStyle Hidden -File "$env:USERPROFILE\Documents\PowerShell\Scripts\speed_analyzer.ps1"'
+        $action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument "-NoProfile -WindowStyle Hidden -File `"$env:USERPROFILE\Documents\PowerShell\Scripts\speed_analyzer.ps1`""
 
         # Define the frequency of task execution (every N hours, repeat for X days)
-        $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).Date -RepetitionInterval (New-TimeSpan -Hours $interval) -RepetitionDuration (New-TimeSpan -Days $duration)
+        $startTime = (Get-Date).AddMinutes(1) # Set start time 1 minute from now
+        $trigger = New-ScheduledTaskTrigger -Once -At $startTime -RepetitionInterval (New-TimeSpan -Hours $interval) -RepetitionDuration (New-TimeSpan -Days $duration)
 
         # Create the scheduled task
-        $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
+        $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -RunOnlyIfNetworkAvailable -Compatibility Win8
         if ($wakeToRun) {
             $settings.WakeToRun = $true
         }
 
-        Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Description "Scheduled task to run the Speedtest script."
+        Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -User $env:USERNAME -RunLevel Limited -Description "Scheduled task to run the Speedtest script."
 
         Write-Host "The scheduled task '$taskName' has been created with the specified parameters."
     } else {
